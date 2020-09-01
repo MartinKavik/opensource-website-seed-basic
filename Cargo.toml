@@ -1,11 +1,8 @@
 [package]
 version = "0.1.0"
-name = "{{project-name}}"
-repository = "https://github.com/seed-rs/seed-quickstart"
-authors = ["{{authors}}"]
-description = "App Description"
-categories = ["category"]
-license = "MIT"
+name = "opensource-website-seed-basic"
+repository = "https://github.com/MartinKavik/opensource-website-seed-basic"
+authors = ["martin@kavik.cz"]
 readme = "./README.md"
 edition = "2018"
 
@@ -13,12 +10,10 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.13"
+wasm-bindgen-test = "0.3.17"
 
 [dependencies]
-# This commit points to Seed 0.7.0 with important fixes.
-# Replace with `seed = "0.8.0"` (or newer) once released.
-seed = { git = "https://github.com/seed-rs/seed", rev = "0a538f0" }
+seed = { git = "https://github.com/seed-rs/seed", rev = "597effe" }
 
 [profile.release]
 lto = true

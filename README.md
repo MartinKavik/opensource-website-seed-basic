@@ -1,3 +1,14 @@
+# opensource-website
+
+> https://github.com/EmbarkStudios/opensource-website in Seed
+
+Live: https://opensource-website-seed-basic.netlify.app/
+
+Original quickstart README:
+
+---
+
+
 # Seed Quickstart
 
 > Basic Rust-only template for your new Seed app.
