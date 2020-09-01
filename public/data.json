@@ -1,0 +1,138 @@
+{
+  "projects": [
+    {
+      "name": "texture-synthesis",
+      "emoji": "🎨",
+      "tags": ["rust"],
+      "description": "Example-based texture synthesis written in Rust",
+      "featured": true,
+      "extendedDescription": "A light Rust API for Multiresolution Stochastic Texture Synthesis, a non-parametric example-based algorithm for image generation.",
+      "featureImage": "https://camo.githubusercontent.com/c279dea27db2c10f64cd27563d8d7cc86048c5c1/68747470733a2f2f692e696d6775722e636f6d2f43735a6f5350532e6a7067"
+    },
+    {
+      "name": "cargo-deny",
+      "emoji": "❌",
+      "tags": ["rust", "tools"],
+      "description": "Cargo plugin to help you manage large dependency graphs",
+      "featured": false,
+      "featureImage": "https://camo.githubusercontent.com/fe000e383ffe85ed80a2fff1be630a6da4ae7070/68747470733a2f2f692e696d6775722e636f6d2f787461727a65552e706e67"
+    },
+    {
+      "name": "tame-oauth",
+      "emoji": "🔐",
+      "tags": ["rust"],
+      "description": "Small OAuth crate that follows the sans-io approach"
+    },
+    {
+      "name": "tame-gcs",
+      "emoji": "📁",
+      "tags": ["rust", "gcp"],
+      "description": "A small library with a limited set of Google Cloud Storage operations"
+    },
+    {
+      "name": "ash-molten",
+      "emoji": "🌋",
+      "tags": ["rust"],
+      "description": "Statically linked MoltenVK for Vulkan on Mac using Ash"
+    },
+    {
+      "name": "helix-oidc",
+      "emoji": "🧬",
+      "tags": ["go"],
+      "description": "Helix Perforce OIDC validator"
+    },
+    {
+      "name": "buildkite-jobify",
+      "emoji": "👷",
+      "tags": ["rust", "tools"],
+      "description": "Kubekite, but in Rust, using configuration from your repos"
+    },
+    {
+      "name": "cargo-fetcher",
+      "emoji": "🎁",
+      "tags": ["rust", "tools"],
+      "description": "Cargo plugin for quickly fetching dependencies"
+    },
+    {
+      "name": "physx-rs",
+      "emoji": "🎳",
+      "tags": ["rust"],
+      "description": "Rust binding and wrapper over NVIDIA PhysX",
+      "featured": true,
+      "extendedDescription": "Rust binding and wrapper over NVIDIA PhysX, a popular and mature physics engine particularly well-suited for games.",
+      "featureImage": "https://raw.githubusercontent.com/EmbarkStudios/physx-rs/master/images/example-ball.png"
+    },
+    {
+      "name": "wg-ui",
+      "emoji": "",
+      "tags": ["go", "web"],
+      "description": "A basic web UI for managing WireGuard clients."
+    },
+    {
+      "name": "docker-windows",
+      "emoji": "🐳",
+      "tags": ["docker"],
+      "description": "Dockerfiles for Windows + rust CI"
+    },
+    {
+      "name": "gke-accelerated-xorg-example",
+      "emoji": "",
+      "tags": ["docker", "gcp"],
+      "description": "Example project for running remote rendering on GKE"
+    },
+    {
+      "name": "opensource-website",
+      "emoji": "🌐",
+      "tags": ["web"],
+      "description": "The webpage you're looking at right now"
+    },
+    {
+      "name": "spdx",
+      "emoji": "🆔",
+      "tags": ["rust"],
+      "description": "Helper crate for SPDX expressions"
+    },
+    {
+      "name": "rpmalloc-rs",
+      "emoji": "🐏",
+      "tags": ["rust"],
+      "description": "Cross-platform Rust memory allocator using <a href=\"https://github.com/rampantpixels/rpmalloc\">rpmalloc</a>"
+    },
+    {
+      "name": "k8s-buildkite-plugin",
+      "emoji": "",
+      "tags": ["kubernetes", "buildkite"],
+      "description": "Run any buildkite build step as a Kubernetes Job"
+    },
+    {
+      "name": "cargo-about",
+      "emoji": "📜",
+      "tags": ["rust", "tools"],
+      "description": "Cargo plugin to generate list of all licenses for a crate"
+    },
+    {
+      "name": "blender-tools",
+      "emoji": "🐵",
+      "tags": ["python", "blender"],
+      "description": "A Blender add-on containing workflow tools for game development"
+    },
+    {
+      "name": "krates",
+      "emoji": "📦",
+      "tags": ["rust", "tools"],
+      "description": "Creates graphs of crates from cargo_metadata metadata."
+    },
+    {
+      "name": "superluminal-perf-rs",
+      "emoji": "🔆",
+      "tags": ["rust", "tools"],
+      "description": "Superluminal Performance profiler Rust API for adding user events to captures."
+    },
+    {
+      "name": "puffin",
+      "emoji": "🐦",
+      "tags": ["rust", "tools"],
+      "description": "Simple instrumentation profiler for Rust."
+    }
+  ]
+}
