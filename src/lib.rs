@@ -8,13 +8,18 @@ use serde::Deserialize;
 // ------ ------
 
 fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
-    orders.perform_cmd(async { Msg::DataFetched(async {
-        fetch("/public/data.json")
-            .await?
-            .check_status()?
-            .json()
-            .await
-    }.await)});
+    orders.perform_cmd(async {
+        Msg::DataFetched(
+            async {
+                fetch("/public/data.json")
+                    .await?
+                    .check_status()?
+                    .json()
+                    .await
+            }
+            .await,
+        )
+    });
 
     Model {
         data: Data {
@@ -71,8 +76,11 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::DataFetched(Ok(data)) => {
             model.data = data;
-            model.data.projects.sort_by_cached_key(|project| project.name.clone());
-        },
+            model
+                .data
+                .projects
+                .sort_by_cached_key(|project| project.name.clone());
+        }
         Msg::DataFetched(Err(error)) => error!(error),
         Msg::ToggleSearch => {
             if model.show_search {
@@ -87,7 +95,7 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
                     input_element.select();
                 });
             }
-        },
+        }
         Msg::CloseSearch => model.show_search = false,
         Msg::SearchQueryChanged(query) => model.search_query = query,
     }
@@ -105,37 +113,47 @@ fn star_button_src(project_name: &str) -> String {
     format!("https://ghbtns.com/github-btn.html?user=EmbarkStudios&repo={}&type=star&count=true&size=large", project_name)
 }
 
-fn iter_projects_by_tag<'a>(projects: &'a [Project], tag: &'a str) -> impl Iterator<Item = &'a Project> {
-    projects.iter().filter(move |project| project.tags.iter().any(|project_tag| project_tag.as_str() == tag))
+fn iter_projects_by_tag<'a>(
+    projects: &'a [Project],
+    tag: &'a str,
+) -> impl Iterator<Item = &'a Project> {
+    projects.iter().filter(move |project| {
+        project
+            .tags
+            .iter()
+            .any(|project_tag| project_tag.as_str() == tag)
+    })
 }
 
 fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
-    section![C!["category"],
-        h2![C!["category-title"],
+    section![
+        C!["category"],
+        h2![
+            C!["category-title"],
             "Our ",
             span![C!["category-tag"], tag],
             " projects"
         ],
-        div![id!(tag), C!["projects-container"],
+        div![
+            id!(tag),
+            C!["projects-container"],
             projects.map(view_project)
         ]
     ]
 }
 
 fn view_project(project: &Project) -> Node<Msg> {
-    a![C!["project"],
-        attrs!{At::Href => repo_url(&project.name)},
+    a![
+        C!["project"],
+        attrs! {At::Href => repo_url(&project.name)},
         div![
-            h3![C!["title"],
-                span![C!["emoji"],
-                    &project.emoji
-                ],
+            h3![
+                C!["title"],
+                span![C!["emoji"], &project.emoji],
                 " ",
                 &project.name,
             ],
-            p![
-                raw![&project.description],
-            ],
+            p![raw![&project.description],],
             view_tags(project.tags.iter())
         ],
         view_star_button(&project.name),
@@ -143,21 +161,22 @@ fn view_project(project: &Project) -> Node<Msg> {
 }
 
 fn view_tags<'a>(tags: impl Iterator<Item = &'a String>) -> Node<Msg> {
-    div![C!["tags"],
+    div![
+        C!["tags"],
         tags.map(|tag| {
-            div![C!["tag", format!("tag-{}", tag)],
-                a![attrs!{At::Href => format!("/tags?tag={}", tag)},
-                    tag
-                ]
+            div![
+                C!["tag", format!("tag-{}", tag)],
+                a![attrs! {At::Href => format!("/tags?tag={}", tag)}, tag]
             ]
         })
     ]
 }
 
 fn view_star_button(project_name: &str) -> Node<Msg> {
-    iframe![C!["star-button"],
-        style!{St::Border => 0},
-        attrs!{
+    iframe![
+        C!["star-button"],
+        style! {St::Border => 0},
+        attrs! {
             At::Src => star_button_src(project_name),
             At::Width => px(160),
             At::Height => px(30),
@@ -173,11 +192,21 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
     let projects = &model.data.projects;
 
     let featured_projects = projects.iter().filter(|project| project.featured);
-    let search_results = projects.iter().filter(|project| project.name.to_lowercase().contains(&model.search_query.to_lowercase()));
+    let search_results = projects.iter().filter(|project| {
+        project
+            .name
+            .to_lowercase()
+            .contains(&model.search_query.to_lowercase())
+    });
 
     nodes![
         view_header(),
-        view_search_overlay(model.show_search, &model.search_query, search_results, &model.search_input_element),
+        view_search_overlay(
+            model.show_search,
+            &model.search_query,
+            search_results,
+            &model.search_input_element
+        ),
         view_section_hero(),
         view_section_featured(featured_projects),
         view_section_blender(iter_projects_by_tag(projects, "blender")),
@@ -190,58 +219,81 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
     ]
 }
 
-
 fn view_header() -> Node<Msg> {
-    header![C!["header"],
-        a![attrs!{At::Href => "https://embark-studios.com"},
-            img![id!("logo"), attrs!{At::Src => "/public/img/logo.png"}]
+    header![
+        C!["header"],
+        a![
+            attrs! {At::Href => "https://embark-studios.com"},
+            img![id!("logo"), attrs! {At::Src => "/public/img/logo.png"}]
         ],
         div![
-            a![C!["fa", "fa-globe"], attrs!{At::Href => "https://embark-studios.com"}],
+            a![
+                C!["fa", "fa-globe"],
+                attrs! {At::Href => "https://embark-studios.com"}
+            ],
             " ",
-            a![C!["fa", "fa-twitter"], attrs!{At::Href => "https://twitter.com/EmbarkStudios"}],
+            a![
+                C!["fa", "fa-twitter"],
+                attrs! {At::Href => "https://twitter.com/EmbarkStudios"}
+            ],
             " ",
-            a![C!["fa", "fa-github"], attrs!{At::Href => "https://github.com/EmbarkStudios"}],
+            a![
+                C!["fa", "fa-github"],
+                attrs! {At::Href => "https://github.com/EmbarkStudios"}
+            ],
             " ",
-            a![C!["fa", "fa-search", "search-icon"], attrs!{At::Href => "#"}, 
-                ev(Ev::Click, |event| { event.prevent_default(); Msg::ToggleSearch })
+            a![
+                C!["fa", "fa-search", "search-icon"],
+                attrs! {At::Href => "#"},
+                ev(Ev::Click, |event| {
+                    event.prevent_default();
+                    Msg::ToggleSearch
+                })
             ],
         ]
     ]
 }
 
 fn view_search_overlay<'a>(
-    show_search: bool, 
-    search_query: &str, 
-    search_results: impl Iterator<Item = &'a Project>, 
+    show_search: bool,
+    search_query: &str,
+    search_results: impl Iterator<Item = &'a Project>,
     search_input_element: &ElRef<web_sys::HtmlInputElement>,
 ) -> Node<Msg> {
-    div![C!["search-overlay"],
+    div![
+        C!["search-overlay"],
         // @TODO remove style! below ; custom style to see at least something
-        style!{
+        style! {
             St::Position => "absolute",
             St::Background => "white",
             St::MaxHeight => vh(85),
             St::OverflowY => "auto",
         },
-        style!{
+        style! {
             St::Display => if show_search { "block" } else { "none" },
         },
-        keyboard_ev(Ev::KeyUp, |event| IF!(event.key() == "Escape" => Msg::CloseSearch)),
-        div![C!["search-overlay__content"],
-            span![C!["fa", "fa-close", "search-overlay__close"],
+        keyboard_ev(
+            Ev::KeyUp,
+            |event| IF!(event.key() == "Escape" => Msg::CloseSearch)
+        ),
+        div![
+            C!["search-overlay__content"],
+            span![
+                C!["fa", "fa-close", "search-overlay__close"],
                 ev(Ev::Click, |_| Msg::CloseSearch)
             ],
-            input![id!("search-input"), 
+            input![
+                id!("search-input"),
                 el_ref(search_input_element),
-                attrs!{
+                attrs! {
                     At::Type => "text",
                     At::Placeholder => "Start typing...",
                     At::Value => search_query,
                 },
                 input_ev(Ev::Input, Msg::SearchQueryChanged),
             ],
-            div![C!["search-overlay__results"],
+            div![
+                C!["search-overlay__results"],
                 search_results.map(view_project)
             ]
         ]
@@ -278,12 +330,13 @@ fn view_section_hero() -> Node<Msg> {
 }
 
 fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
-    section![id!("featured"),
-        div![C!["container"],
-            h2![
-                "Featured Open Source Projects"
-            ],
-            div![C!["projects-container"],
+    section![
+        id!("featured"),
+        div![
+            C!["container"],
+            h2!["Featured Open Source Projects"],
+            div![
+                C!["projects-container"],
                 featured_projects.map(|project| {
                     let feature_image = if let Some(feature_image) = &project.feature_image {
                         feature_image
@@ -292,25 +345,24 @@ fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project
                         return empty![];
                     };
 
-                    let extended_description = if let Some(extended_description) = &project.extended_description {
-                        extended_description
-                    } else {
-                        error!("extended_description is missing");
-                        return empty![];
-                    };
+                    let extended_description =
+                        if let Some(extended_description) = &project.extended_description {
+                            extended_description
+                        } else {
+                            error!("extended_description is missing");
+                            return empty![];
+                        };
 
-                    a![C!["project", "project-featured"],
-                        style!{St::BackgroundImage => format!("url({})", feature_image)},
-                        attrs!{At::Href => repo_url(&project.name)},
-                        h3![C!["title"],
-                            span![C!["emoji"],
-                                &project.emoji
-                            ],
+                    a![
+                        C!["project", "project-featured"],
+                        style! {St::BackgroundImage => format!("url({})", feature_image)},
+                        attrs! {At::Href => repo_url(&project.name)},
+                        h3![
+                            C!["title"],
+                            span![C!["emoji"], &project.emoji],
                             &project.name,
                         ],
-                        p![
-                            &extended_description
-                        ],
+                        p![&extended_description],
                         view_tags(project.tags.iter())
                     ]
                 })
@@ -365,12 +417,11 @@ fn view_section_rust<'a>(rust_projects: impl Iterator<Item = &'a Project>) -> No
 }
 
 fn view_section_projects(projects: &[Project]) -> Node<Msg> {
-    section![
-        div![C!["container"],
-            view_category("go", iter_projects_by_tag(projects, "go")),
-            view_category("web", iter_projects_by_tag(projects, "web")),
-        ]
-    ]
+    section![div![
+        C!["container"],
+        view_category("go", iter_projects_by_tag(projects, "go")),
+        view_category("web", iter_projects_by_tag(projects, "web")),
+    ]]
 }
 
 fn view_section_sponsorship() -> Node<Msg> {
@@ -404,34 +455,29 @@ fn view_section_sponsorship() -> Node<Msg> {
                         title!["Blender icon"],
                         path![attrs!{At::D => "M12.51 13.214c.046-.8.438-1.506 1.03-2.006a3.424 3.424 0 0 1 2.212-.79c.85 0 1.631.3 2.211.79.592.5.983 1.206 1.028 2.005.045.823-.285 1.586-.865 2.153a3.389 3.389 0 0 1-2.374.938 3.393 3.393 0 0 1-2.376-.938c-.58-.567-.91-1.33-.865-2.152M7.35 14.831c.006.314.106.922.256 1.398a7.372 7.372 0 0 0 1.593 2.757 8.227 8.227 0 0 0 2.787 2.001 8.947 8.947 0 0 0 3.66.76 8.964 8.964 0 0 0 3.657-.772 8.285 8.285 0 0 0 2.785-2.01 7.428 7.428 0 0 0 1.592-2.762 6.964 6.964 0 0 0 .25-3.074 7.123 7.123 0 0 0-1.016-2.779 7.764 7.764 0 0 0-1.852-2.043h.002L13.566 2.55l-.02-.015c-.492-.378-1.319-.376-1.86.002-.547.382-.609 1.015-.123 1.415l-.001.001 3.126 2.543-9.53.01h-.013c-.788.001-1.545.518-1.695 1.172-.154.665.38 1.217 1.2 1.22V8.9l4.83-.01-8.62 6.617-.034.025c-.813.622-1.075 1.658-.563 2.313.52.667 1.625.668 2.447.004L7.414 14s-.069.52-.063.831zm12.09 1.741c-.97.988-2.326 1.548-3.795 1.55-1.47.004-2.827-.552-3.797-1.538a4.51 4.51 0 0 1-1.036-1.622 4.282 4.282 0 0 1 .282-3.519 4.702 4.702 0 0 1 1.153-1.371c.942-.768 2.141-1.183 3.396-1.185 1.256-.002 2.455.41 3.398 1.175.48.391.87.854 1.152 1.367a4.28 4.28 0 0 1 .522 1.706 4.236 4.236 0 0 1-.239 1.811 4.54 4.54 0 0 1-1.035 1.626"}],
                     ]
-                ],
+                ]
             ]
-        ]    
+        ]
     ]
 }
 
 fn view_section_project_list<'a>(projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
-    section![
-        div![C!["container"],
-            h3![
-                "Projects A-Z"
-            ],
-            ul![C!["projects-list"],
-                projects.map(|project| {
-                    a![attrs!{At::Href => repo_url(&project.name)},
-                        li![
-                            span![
-                                &project.emoji,
-                                " ",
-                                &project.name,
-                            ],
-                            view_tags(project.tags.iter()),
-                        ]
+    section![div![
+        C!["container"],
+        h3!["Projects A-Z"],
+        ul![
+            C!["projects-list"],
+            projects.map(|project| {
+                a![
+                    attrs! {At::Href => repo_url(&project.name)},
+                    li![
+                        span![&project.emoji, " ", &project.name,],
+                        view_tags(project.tags.iter()),
                     ]
-                })
-            ]
+                ]
+            })
         ]
-    ]
+    ]]
 }
 
 fn view_section_newsletter() -> Node<Msg> {
