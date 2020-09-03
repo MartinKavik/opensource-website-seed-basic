@@ -19,7 +19,10 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
     Model {
         data: Data {
             projects: Vec::new(),
-        }
+        },
+        show_search: false,
+        search_query: String::new(),
+        search_input_element: ElRef::default(),
     }
 }
 
@@ -28,7 +31,10 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
 // ------ ------
 
 struct Model {
-    data: Data
+    data: Data,
+    show_search: bool,
+    search_query: String,
+    search_input_element: ElRef<web_sys::HtmlInputElement>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -56,17 +62,34 @@ struct Project {
 
 enum Msg {
     DataFetched(fetch::Result<Data>),
-    OpenSearch,
+    ToggleSearch,
+    CloseSearch,
+    SearchQueryChanged(String),
 }
 
-fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
+fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::DataFetched(Ok(data)) => {
             model.data = data;
             model.data.projects.sort_by_cached_key(|project| project.name.clone());
         },
         Msg::DataFetched(Err(error)) => error!(error),
-        Msg::OpenSearch => log!("Msg::OpenSearch"),
+        Msg::ToggleSearch => {
+            if model.show_search {
+                model.show_search = false;
+            } else {
+                model.show_search = true;
+
+                let search_input_element = model.search_input_element.clone();
+                orders.after_next_render(move |_| {
+                    let input_element = search_input_element.get().expect("input_element");
+                    input_element.focus().expect("focus input_element");
+                    input_element.select();
+                });
+            }
+        },
+        Msg::CloseSearch => model.show_search = false,
+        Msg::SearchQueryChanged(query) => model.search_query = query,
     }
 }
 
@@ -149,11 +172,14 @@ fn view_star_button(project_name: &str) -> Node<Msg> {
 fn view(model: &Model) -> Vec<Node<Msg>> {
     let projects = &model.data.projects;
 
-    vec![
+    let featured_projects = projects.iter().filter(|project| project.featured);
+    let search_results = projects.iter().filter(|project| project.name.contains(&model.search_query));
+
+    nodes![
         view_header(),
-        view_search_overlay(),
+        view_search_overlay(model.show_search, &model.search_query, search_results, &model.search_input_element),
         view_section_hero(),
-        view_section_featured(projects.iter().filter(|project| project.featured)),
+        view_section_featured(featured_projects),
         view_section_blender(iter_projects_by_tag(projects, "blender")),
         view_section_rust(iter_projects_by_tag(projects, "rust")),
         view_section_projects(projects),
@@ -187,13 +213,18 @@ fn view_header() -> Node<Msg> {
             a![C!["fa", "fa-github"], attrs!{At::Href => "https://github.com/EmbarkStudios"}],
             " ",
             a![C!["fa", "fa-search", "search-icon"], attrs!{At::Href => "#"}, 
-                ev(Ev::Click, |event| { event.prevent_default(); Msg::OpenSearch })
+                ev(Ev::Click, |event| { event.prevent_default(); Msg::ToggleSearch })
             ],
         ]
     ]
 }
 
-fn view_search_overlay() -> Node<Msg> {
+fn view_search_overlay<'a>(
+    show_search: bool, 
+    search_query: &str, 
+    search_results: impl Iterator<Item = &'a Project>, 
+    search_input_element: &ElRef<web_sys::HtmlInputElement>,
+) -> Node<Msg> {
     // <div class="search-overlay" v-show="showSearch" @keyup.esc="closeSearch" style="display: none;">
     //     <div class="search-overlay__content">
     //       <span class="fa fa-close search-overlay__close" @click="closeSearch"></span>
@@ -213,7 +244,37 @@ fn view_search_overlay() -> Node<Msg> {
     //       </div>
     //     </div>
     //   </div>
-    div![]
+
+    div![C!["search-overlay"],
+        // @TODO remove style! below ; custom style to see at least something
+        style!{
+            St::Position => "absolute",
+            St::Background => "white",
+            St::MaxHeight => vh(85),
+            St::OverflowY => "auto",
+        },
+        style!{
+            St::Display => if show_search { "block" } else { "none" },
+        },
+        keyboard_ev(Ev::KeyUp, |event| IF!(event.key() == "Escape" => Msg::CloseSearch)),
+        div![C!["search-overlay__content"],
+            span![C!["fa", "fa-close", "search-overlay__close"],
+                ev(Ev::Click, |_| Msg::CloseSearch)
+            ],
+            input![id!("search-input"), 
+                el_ref(search_input_element),
+                attrs!{
+                    At::Type => "text",
+                    At::Placeholder => "Start typing...",
+                    At::Value => search_query,
+                },
+                input_ev(Ev::Input, Msg::SearchQueryChanged),
+            ],
+            div![C!["search-overlay__results"],
+                search_results.map(view_project)
+            ]
+        ]
+    ]
 }
 
 fn view_section_hero() -> Node<Msg> {
