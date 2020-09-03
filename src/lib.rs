@@ -154,7 +154,7 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
         view_section_rust(projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "rust"))),
         view_section_projects(projects),
         view_section_sponsorship(),
-        view_section_project_list(),
+        view_section_project_list(projects.iter()),
         view_section_newsletter(),
         view_section_contribute(),
     ]
@@ -508,7 +508,7 @@ fn view_section_sponsorship() -> Node<Msg> {
     ]
 }
 
-fn view_section_project_list() -> Node<Msg> {
+fn view_section_project_list<'a>(projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
 //     <section>
 //     <div class="container">
 //       <h3>
@@ -519,15 +519,25 @@ fn view_section_project_list() -> Node<Msg> {
 //       </ul>
 //     </div>
 //   </section>
+
     section![
         div![C!["container"],
             h3![
                 "Projects A-Z"
             ],
             ul![C!["projects-list"],
-                li![
-                    "@TODO projects list"
-                ]
+                projects.map(|project| {
+                    a![attrs!{At::Href => repo_url(&project.name)},
+                        li![
+                            span![
+                                &project.emoji,
+                                " ",
+                                &project.name,
+                            ],
+                            view_tags(project.tags.iter()),
+                        ]
+                    ]
+                })
             ]
         ]
     ]
