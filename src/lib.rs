@@ -1,4 +1,4 @@
-#![allow(clippy::wildcard_imports)]
+#![allow(clippy::wildcard_imports, clippy::non_ascii_literal)]
 
 use seed::{prelude::*, *};
 use serde::Deserialize;
@@ -173,7 +173,7 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
     let projects = &model.data.projects;
 
     let featured_projects = projects.iter().filter(|project| project.featured);
-    let search_results = projects.iter().filter(|project| project.name.contains(&model.search_query));
+    let search_results = projects.iter().filter(|project| project.name.to_lowercase().contains(&model.search_query.to_lowercase()));
 
     nodes![
         view_header(),
