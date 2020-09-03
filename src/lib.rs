@@ -78,8 +78,41 @@ fn repo_url(project_name: &str) -> String {
     format!("https://github.com/EmbarkStudios/{}", project_name)
 }
 
-fn start_button_src(project_name: &str) -> String {
+fn star_button_src(project_name: &str) -> String {
     format!("https://ghbtns.com/github-btn.html?user=EmbarkStudios&repo={}&type=star&count=true&size=large", project_name)
+}
+
+fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
+    section![C!["category"],
+        h2![C!["category-title"],
+            "Our ",
+            span![C!["category-tag"], tag],
+            " projects"
+        ],
+        div![id!(tag), C!["projects-container"],
+            projects.map(view_project)
+        ]
+    ]
+}
+
+fn view_project(project: &Project) -> Node<Msg> {
+    a![C!["project"],
+        attrs!{At::Href => repo_url(&project.name)},
+        div![
+            h3![C!["title"],
+                span![C!["emoji"],
+                    &project.emoji
+                ],
+                " ",
+                &project.name,
+            ],
+            p![
+                raw![&project.description],
+            ],
+            view_tags(project.tags.iter())
+        ],
+        view_star_button(&project.name),
+    ]
 }
 
 fn view_tags<'a>(tags: impl Iterator<Item = &'a String>) -> Node<Msg> {
@@ -91,6 +124,17 @@ fn view_tags<'a>(tags: impl Iterator<Item = &'a String>) -> Node<Msg> {
                 ]
             ]
         })
+    ]
+}
+
+fn view_star_button(project_name: &str) -> Node<Msg> {
+    iframe![C!["star-button"],
+        style!{St::Border => 0},
+        attrs!{
+            At::Src => star_button_src(project_name),
+            At::Width => px(160),
+            At::Height => px(30),
+        }
     ]
 }
 
@@ -107,8 +151,8 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
         view_section_hero(),
         view_section_featured(projects.iter().filter(|project| project.featured)),
         view_section_blender(projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "blender"))),
-        view_section_rust(),
-        view_section_projects(),
+        view_section_rust(projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "rust"))),
+        view_section_projects(projects),
         view_section_sponsorship(),
         view_section_project_list(),
         view_section_newsletter(),
@@ -331,31 +375,7 @@ fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>)
             p![
                 "We have also released an open source add-on featuring some of our day-to-day studio tools.",
             ],
-            blender_projects.map(|project| {
-                a![C!["project"],
-                    attrs!{At::Href => repo_url(&project.name)},
-                    div![
-                        h3![C!["title"],
-                            span![C!["emoji"],
-                                &project.emoji
-                            ],
-                            &project.name,
-                        ],
-                        p![
-                            raw![&project.description],
-                        ],
-                        view_tags(project.tags.iter())
-                    ],
-                    iframe![C!["star-button"],
-                        style!{St::Border => 0},
-                        attrs!{
-                            At::Src => start_button_src(&project.name),
-                            At::Width => px(160),
-                            At::Height => px(30),
-                        }
-                    ]
-                ]
-            }),
+            blender_projects.map(view_project),
             a![C!["button-primary", "background-grey"], attrs!{At::Href => "https://medium.com/embarkstudios/a-love-letter-to-blender-e54167c22193"},
                 "Learn More"
             ],
@@ -363,7 +383,7 @@ fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>)
     ]
 }
 
-fn view_section_rust() -> Node<Msg> {
+fn view_section_rust<'a>(rust_projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
     //     <section id="rust" class="full-width-section background-grey">
     //     <div class="container">
     //       <h1>
@@ -396,14 +416,12 @@ fn view_section_rust() -> Node<Msg> {
             a![C!["button-primary", "background-red"], attrs!{At::Href => "https://embark.rs"},
                 "Learn More",
             ],
-            div![
-                "@TODO Rust projects"
-            ]
+            view_category("rust", rust_projects)
         ]
     ]
 }
 
-fn view_section_projects() -> Node<Msg> {
+fn view_section_projects(projects: &[Project]) -> Node<Msg> {
     //     <section>
     //     <div class="container">
     //       <project-category
@@ -417,14 +435,14 @@ fn view_section_projects() -> Node<Msg> {
     //       ></project-category>
     //     </div>
     //   </section>
+
+    let go_projects = projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "go"));
+    let web_projects = projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "web"));
+
     section![
         div![C!["container"],
-            div![
-                "@TODO Go projects"
-            ],
-            div![
-                "@TODO Web projects"
-            ],
+            view_category("go", go_projects),
+            view_category("web", web_projects),
         ]
     ]
 }
