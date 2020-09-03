@@ -1,32 +1,68 @@
 #![allow(clippy::wildcard_imports)]
 
 use seed::{prelude::*, *};
+use serde::Deserialize;
 
 // ------ ------
 //     Init
 // ------ ------
 
-fn init(_: Url, _: &mut impl Orders<Msg>) -> Model {
-    Model::default()
+fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
+    orders.perform_cmd(async { Msg::DataFetched(async {
+        fetch("/public/data.json")
+            .await?
+            .check_status()?
+            .json()
+            .await
+    }.await)});
+
+    Model {
+        data: Data {
+            projects: Vec::new(),
+        }
+    }
 }
 
 // ------ ------
 //     Model
 // ------ ------
 
-type Model = i32;
+struct Model {
+    data: Data
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Data {
+    projects: Vec<Project>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct Project {
+    name: String,
+    emoji: String,
+    tags: Vec<String>,
+    description: String,
+    #[serde(default)]
+    featured: bool,
+    extended_description: Option<String>,
+    feature_image: Option<String>,
+}
 
 // ------ ------
 //    Update
 // ------ ------
 
-#[derive(Copy, Clone)]
 enum Msg {
+    DataFetched(fetch::Result<Data>),
     OpenSearch,
 }
 
 fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
     match msg {
+        Msg::DataFetched(Ok(data)) => model.data = data,
+        Msg::DataFetched(Err(error)) => error!(error),
         Msg::OpenSearch => log!("Msg::OpenSearch"),
     }
 }

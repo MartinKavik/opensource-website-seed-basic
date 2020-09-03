@@ -14,6 +14,7 @@ wasm-bindgen-test = "0.3.17"
 
 [dependencies]
 seed = { git = "https://github.com/seed-rs/seed", rev = "597effe" }
+serde = "1.0.115"
 
 [profile.release]
 lto = true
