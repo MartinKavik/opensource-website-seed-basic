@@ -61,10 +61,33 @@ enum Msg {
 
 fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
     match msg {
-        Msg::DataFetched(Ok(data)) => model.data = data,
+        Msg::DataFetched(Ok(data)) => {
+            model.data = data;
+            model.data.projects.sort_by_cached_key(|project| project.name.clone());
+        },
         Msg::DataFetched(Err(error)) => error!(error),
         Msg::OpenSearch => log!("Msg::OpenSearch"),
     }
+}
+
+// ------ ------
+// View Helpers
+// ------ ------
+
+fn repo_url(project_name: &str) -> String {
+    format!("https://github.com/EmbarkStudios/{}", project_name)
+}
+
+fn view_tags<'a>(tags: impl Iterator<Item = &'a String>) -> Node<Msg> {
+    div![C!["tags"],
+        tags.map(|tag| {
+            div![C!["tag", format!("tag-{}", tag)],
+                a![attrs!{At::Href => format!("/tags?tag={}", tag)},
+                    tag
+                ]
+            ]
+        })
+    ]
 }
 
 // ------ ------
@@ -72,11 +95,13 @@ fn update(msg: Msg, model: &mut Model, _: &mut impl Orders<Msg>) {
 // ------ ------
 
 fn view(model: &Model) -> Vec<Node<Msg>> {
+    let projects = &model.data.projects;
+
     vec![
         view_header(),
         view_search_overlay(),
         view_section_hero(),
-        view_section_featured(),
+        view_section_featured(projects.iter().filter(|project| project.featured)),
         view_section_blender(),
         view_section_rust(),
         view_section_projects(),
@@ -195,7 +220,7 @@ fn view_section_hero() -> Node<Msg> {
     ]
 }
 
-fn view_section_featured() -> Node<Msg> {
+fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
     //     <section id="featured">
     //     <div class="container">
     //       <h2>
@@ -221,7 +246,36 @@ fn view_section_featured() -> Node<Msg> {
                 "Featured Open Source Projects"
             ],
             div![C!["projects-container"],
-                "@TODO Projects"
+                featured_projects.map(|project| {
+                    let feature_image = if let Some(feature_image) = &project.feature_image {
+                        feature_image
+                    } else {
+                        error!("feature image is missing");
+                        return empty![];
+                    };
+
+                    let extended_description = if let Some(extended_description) = &project.extended_description {
+                        extended_description
+                    } else {
+                        error!("extended_description is missing");
+                        return empty![];
+                    };
+
+                    a![C!["project", "project-featured"],
+                        style!{St::BackgroundImage => format!("url({})", feature_image)},
+                        attrs!{At::Href => repo_url(&project.name)},
+                        h3![C!["title"],
+                            span![C!["emoji"],
+                                &project.emoji
+                            ],
+                            &project.name,
+                        ],
+                        p![
+                            &extended_description
+                        ],
+                        view_tags(project.tags.iter())
+                    ]
+                })
             ]
         ]
     ]
