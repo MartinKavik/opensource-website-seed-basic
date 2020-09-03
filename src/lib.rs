@@ -82,6 +82,10 @@ fn star_button_src(project_name: &str) -> String {
     format!("https://ghbtns.com/github-btn.html?user=EmbarkStudios&repo={}&type=star&count=true&size=large", project_name)
 }
 
+fn iter_projects_by_tag<'a>(projects: &'a [Project], tag: &'a str) -> impl Iterator<Item = &'a Project> {
+    projects.iter().filter(move |project| project.tags.iter().any(|project_tag| project_tag.as_str() == tag))
+}
+
 fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
     section![C!["category"],
         h2![C!["category-title"],
@@ -150,8 +154,8 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
         view_search_overlay(),
         view_section_hero(),
         view_section_featured(projects.iter().filter(|project| project.featured)),
-        view_section_blender(projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "blender"))),
-        view_section_rust(projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "rust"))),
+        view_section_blender(iter_projects_by_tag(projects, "blender")),
+        view_section_rust(iter_projects_by_tag(projects, "rust")),
         view_section_projects(projects),
         view_section_sponsorship(),
         view_section_project_list(projects.iter()),
@@ -436,13 +440,10 @@ fn view_section_projects(projects: &[Project]) -> Node<Msg> {
     //     </div>
     //   </section>
 
-    let go_projects = projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "go"));
-    let web_projects = projects.iter().filter(|project| project.tags.iter().any(|tag| tag == "web"));
-
     section![
         div![C!["container"],
-            view_category("go", go_projects),
-            view_category("web", web_projects),
+            view_category("go", iter_projects_by_tag(projects, "go")),
+            view_category("web", iter_projects_by_tag(projects, "web")),
         ]
     ]
 }
