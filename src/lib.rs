@@ -3,11 +3,15 @@
 use seed::{prelude::*, *};
 use serde::Deserialize;
 
+// -- Url parts --
+const TAGS: &str = "tags";
+const TAGS_TAG_PARAMETER: &str = "tag";
+
 // ------ ------
 //     Init
 // ------ ------
 
-fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
+fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
     orders.perform_cmd(async {
         Msg::DataFetched(
             async {
@@ -22,6 +26,7 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
     });
 
     Model {
+        base_url: url.to_base_url(),
         data: Data {
             projects: Vec::new(),
         },
@@ -36,6 +41,7 @@ fn init(_: Url, orders: &mut impl Orders<Msg>) -> Model {
 // ------ ------
 
 struct Model {
+    base_url: Url,
     data: Data,
     show_search: bool,
     search_query: String,
@@ -59,6 +65,22 @@ struct Project {
     featured: bool,
     extended_description: Option<String>,
     feature_image: Option<String>,
+}
+
+// ------ ------
+//     Urls
+// ------ ------
+
+struct_urls!();
+impl<'a> Urls<'a> {
+    pub fn home(self) -> Url {
+        self.base_url()
+    }
+    pub fn tags(self, tag: &str) -> Url {
+        self.base_url().add_path_part(TAGS).set_search(UrlSearch::new(vec![
+            (TAGS_TAG_PARAMETER, vec![tag])
+        ]))
+    }
 }
 
 // ------ ------
@@ -125,7 +147,7 @@ fn iter_projects_by_tag<'a>(
     })
 }
 
-fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
+fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
     section![
         C!["category"],
         h2![
@@ -137,12 +159,12 @@ fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>) -> 
         div![
             id!(tag),
             C!["projects-container"],
-            projects.map(view_project)
+            projects.map(|project| view_project(project, base_url))
         ]
     ]
 }
 
-fn view_project(project: &Project) -> Node<Msg> {
+fn view_project(project: &Project, base_url: &Url) -> Node<Msg> {
     a![
         C!["project"],
         attrs! {At::Href => repo_url(&project.name)},
@@ -154,19 +176,19 @@ fn view_project(project: &Project) -> Node<Msg> {
                 &project.name,
             ],
             p![raw![&project.description],],
-            view_tags(project.tags.iter())
+            view_tags(project.tags.iter(), base_url)
         ],
         view_star_button(&project.name),
     ]
 }
 
-fn view_tags<'a>(tags: impl Iterator<Item = &'a String>) -> Node<Msg> {
+fn view_tags<'a>(tags: impl Iterator<Item = &'a String>, base_url: &Url) -> Node<Msg> {
     div![
         C!["tags"],
         tags.map(|tag| {
             div![
                 C!["tag", format!("tag-{}", tag)],
-                a![attrs! {At::Href => format!("/tags?tag={}", tag)}, tag]
+                a![attrs! {At::Href => Urls::new(base_url).tags(tag)}, tag]
             ]
         })
     ]
@@ -205,15 +227,16 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
             model.show_search,
             &model.search_query,
             search_results,
-            &model.search_input_element
+            &model.search_input_element,
+            &model.base_url,
         ),
         view_section_hero(),
-        view_section_featured(featured_projects),
-        view_section_blender(iter_projects_by_tag(projects, "blender")),
-        view_section_rust(iter_projects_by_tag(projects, "rust")),
-        view_section_projects(projects),
+        view_section_featured(featured_projects, &model.base_url),
+        view_section_blender(iter_projects_by_tag(projects, "blender"), &model.base_url),
+        view_section_rust(iter_projects_by_tag(projects, "rust"), &model.base_url),
+        view_section_projects(projects, &model.base_url),
         view_section_sponsorship(),
-        view_section_project_list(projects.iter()),
+        view_section_project_list(projects.iter(), &model.base_url),
         view_section_newsletter(),
         view_section_contribute(),
     ]
@@ -259,6 +282,7 @@ fn view_search_overlay<'a>(
     search_query: &str,
     search_results: impl Iterator<Item = &'a Project>,
     search_input_element: &ElRef<web_sys::HtmlInputElement>,
+    base_url: &Url,
 ) -> Node<Msg> {
     div![
         C!["search-overlay"],
@@ -294,7 +318,7 @@ fn view_search_overlay<'a>(
             ],
             div![
                 C!["search-overlay__results"],
-                search_results.map(view_project)
+                search_results.map(|project| view_project(project, base_url))
             ]
         ]
     ]
@@ -329,7 +353,7 @@ fn view_section_hero() -> Node<Msg> {
     ]
 }
 
-fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
+fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
     section![
         id!("featured"),
         div![
@@ -363,7 +387,7 @@ fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project
                             &project.name,
                         ],
                         p![&extended_description],
-                        view_tags(project.tags.iter())
+                        view_tags(project.tags.iter(), base_url)
                     ]
                 })
             ]
@@ -371,7 +395,7 @@ fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project
     ]
 }
 
-fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
+fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
     section![id!("blender"), C!["full-width-section", "background-blue"],
         div![C!["container"],
             h1![
@@ -388,7 +412,7 @@ fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>)
             p![
                 "We have also released an open source add-on featuring some of our day-to-day studio tools.",
             ],
-            blender_projects.map(view_project),
+            blender_projects.map(|project| view_project(project, base_url)),
             a![C!["button-primary", "background-grey"], attrs!{At::Href => "https://medium.com/embarkstudios/a-love-letter-to-blender-e54167c22193"},
                 "Learn More"
             ],
@@ -396,7 +420,7 @@ fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>)
     ]
 }
 
-fn view_section_rust<'a>(rust_projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
+fn view_section_rust<'a>(rust_projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
     section![id!("rust"), C!["full-width-section", "background-grey"],
         div![C!["container"],
             h1![
@@ -411,16 +435,16 @@ fn view_section_rust<'a>(rust_projects: impl Iterator<Item = &'a Project>) -> No
             a![C!["button-primary", "background-red"], attrs!{At::Href => "https://embark.rs"},
                 "Learn More",
             ],
-            view_category("rust", rust_projects)
+            view_category("rust", rust_projects, base_url)
         ]
     ]
 }
 
-fn view_section_projects(projects: &[Project]) -> Node<Msg> {
+fn view_section_projects(projects: &[Project], base_url: &Url) -> Node<Msg> {
     section![div![
         C!["container"],
-        view_category("go", iter_projects_by_tag(projects, "go")),
-        view_category("web", iter_projects_by_tag(projects, "web")),
+        view_category("go", iter_projects_by_tag(projects, "go"), base_url),
+        view_category("web", iter_projects_by_tag(projects, "web"), base_url),
     ]]
 }
 
@@ -461,7 +485,7 @@ fn view_section_sponsorship() -> Node<Msg> {
     ]
 }
 
-fn view_section_project_list<'a>(projects: impl Iterator<Item = &'a Project>) -> Node<Msg> {
+fn view_section_project_list<'a>(projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
     section![div![
         C!["container"],
         h3!["Projects A-Z"],
@@ -472,7 +496,7 @@ fn view_section_project_list<'a>(projects: impl Iterator<Item = &'a Project>) ->
                     attrs! {At::Href => repo_url(&project.name)},
                     li![
                         span![&project.emoji, " ", &project.name,],
-                        view_tags(project.tags.iter()),
+                        view_tags(project.tags.iter(), base_url),
                     ]
                 ]
             })
