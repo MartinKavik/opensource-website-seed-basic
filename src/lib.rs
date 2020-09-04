@@ -1,4 +1,8 @@
-#![allow(clippy::wildcard_imports, clippy::non_ascii_literal)]
+#![allow(
+    clippy::wildcard_imports,
+    clippy::non_ascii_literal,
+    clippy::must_use_candidate
+)]
 
 use seed::{prelude::*, *};
 use serde::Deserialize;
@@ -16,20 +20,18 @@ type Tag = String;
 // ------ ------
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
-    orders
-        .subscribe(Msg::UrlChanged)
-        .perform_cmd(async {
-            Msg::DataFetched(
-                async {
-                    fetch("/public/data.json")
-                        .await?
-                        .check_status()?
-                        .json()
-                        .await
-                }
-                .await,
-            )
-        });
+    orders.subscribe(Msg::UrlChanged).perform_cmd(async {
+        Msg::DataFetched(
+            async {
+                fetch("/public/data.json")
+                    .await?
+                    .check_status()?
+                    .json()
+                    .await
+            }
+            .await,
+        )
+    });
 
     Model {
         base_url: url.to_base_url(),
@@ -84,9 +86,12 @@ enum Page {
 
 impl Page {
     fn init(mut url: Url) -> Self {
-        let selected_tag = url.search_mut().remove(TAGS_TAG_PARAMETER).and_then(|mut values| values.pop());
+        let selected_tag = url
+            .search_mut()
+            .remove(TAGS_TAG_PARAMETER)
+            .and_then(|mut values| values.pop());
 
-        match (url.remaining_path_parts().as_slice(), selected_tag)  {
+        match (url.remaining_path_parts().as_slice(), selected_tag) {
             ([TAGS], Some(tag)) => Self::Tags(tag),
             _ => Self::Home,
         }
@@ -103,9 +108,9 @@ impl<'a> Urls<'a> {
         self.base_url().set_search(UrlSearch::default())
     }
     pub fn tags(self, tag: &str) -> Url {
-        self.base_url().add_path_part(TAGS).set_search(UrlSearch::new(vec![
-            (TAGS_TAG_PARAMETER, vec![tag])
-        ]))
+        self.base_url()
+            .add_path_part(TAGS)
+            .set_search(UrlSearch::new(vec![(TAGS_TAG_PARAMETER, vec![tag])]))
     }
 }
 
@@ -126,10 +131,8 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
         Msg::UrlChanged(subs::UrlChanged(url)) => {
             model.page = Page::init(url);
 
-            window().scroll_to_with_scroll_to_options(
-                web_sys::ScrollToOptions::new().top(0.),
-            );
-        },
+            window().scroll_to_with_scroll_to_options(web_sys::ScrollToOptions::new().top(0.));
+        }
         Msg::DataFetched(Ok(data)) => {
             model.data = data;
             model
@@ -178,7 +181,7 @@ pub fn iter_projects_by_tag<'a>(
 // ------ ------
 
 fn view(model: &Model) -> Vec<Node<Msg>> {
-    let projects =  &model.data.projects;
+    let projects = &model.data.projects;
     let base_url = &model.base_url;
 
     let search_results = projects.iter().filter(|project| {

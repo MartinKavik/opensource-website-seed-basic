@@ -1,6 +1,6 @@
+use super::partial::{repo_url, view_category, view_project, view_tags};
+use crate::{iter_projects_by_tag, Msg, Project};
 use seed::{prelude::*, *};
-use crate::{Msg, Project, iter_projects_by_tag};
-use super::partial::{repo_url, view_category, view_tags, view_project};
 
 // ------ ------
 //     View
@@ -51,7 +51,10 @@ fn view_section_hero() -> Node<Msg> {
     ]
 }
 
-fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
+fn view_section_featured<'a>(
+    featured_projects: impl Iterator<Item = &'a Project>,
+    base_url: &Url,
+) -> Node<Msg> {
     section![
         id!("featured"),
         div![
@@ -93,7 +96,10 @@ fn view_section_featured<'a>(featured_projects: impl Iterator<Item = &'a Project
     ]
 }
 
-fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
+fn view_section_blender<'a>(
+    blender_projects: impl Iterator<Item = &'a Project>,
+    base_url: &Url,
+) -> Node<Msg> {
     section![id!("blender"), C!["full-width-section", "background-blue"],
         div![C!["container"],
             h1![
@@ -118,7 +124,10 @@ fn view_section_blender<'a>(blender_projects: impl Iterator<Item = &'a Project>,
     ]
 }
 
-fn view_section_rust<'a>(rust_projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
+fn view_section_rust<'a>(
+    rust_projects: impl Iterator<Item = &'a Project>,
+    base_url: &Url,
+) -> Node<Msg> {
     section![id!("rust"), C!["full-width-section", "background-grey"],
         div![C!["container"],
             h1![
@@ -183,7 +192,10 @@ fn view_section_sponsorship() -> Node<Msg> {
     ]
 }
 
-fn view_section_project_list<'a>(projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
+fn view_section_project_list<'a>(
+    projects: impl Iterator<Item = &'a Project>,
+    base_url: &Url,
+) -> Node<Msg> {
     section![div![
         C!["container"],
         h3!["Projects A-Z"],
