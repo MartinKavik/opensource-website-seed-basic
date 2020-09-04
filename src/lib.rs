@@ -7,23 +7,27 @@ use serde::Deserialize;
 const TAGS: &str = "tags";
 const TAGS_TAG_PARAMETER: &str = "tag";
 
+type Tag = String;
+
 // ------ ------
 //     Init
 // ------ ------
 
 fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
-    orders.perform_cmd(async {
-        Msg::DataFetched(
-            async {
-                fetch("/public/data.json")
-                    .await?
-                    .check_status()?
-                    .json()
-                    .await
-            }
-            .await,
-        )
-    });
+    orders
+        .subscribe(Msg::UrlChanged)
+        .perform_cmd(async {
+            Msg::DataFetched(
+                async {
+                    fetch("/public/data.json")
+                        .await?
+                        .check_status()?
+                        .json()
+                        .await
+                }
+                .await,
+            )
+        });
 
     Model {
         base_url: url.to_base_url(),
@@ -33,6 +37,7 @@ fn init(url: Url, orders: &mut impl Orders<Msg>) -> Model {
         show_search: false,
         search_query: String::new(),
         search_input_element: ElRef::default(),
+        page: Page::init(url),
     }
 }
 
@@ -46,6 +51,7 @@ struct Model {
     show_search: bool,
     search_query: String,
     search_input_element: ElRef<web_sys::HtmlInputElement>,
+    page: Page,
 }
 
 #[derive(Deserialize, Debug)]
@@ -65,6 +71,24 @@ struct Project {
     featured: bool,
     extended_description: Option<String>,
     feature_image: Option<String>,
+}
+
+// ------ Page ------
+
+enum Page {
+    Home,
+    Tags(Tag),
+}
+
+impl Page {
+    fn init(mut url: Url) -> Self {
+        let selected_tag = url.search_mut().remove(TAGS_TAG_PARAMETER).and_then(|mut values| values.pop());
+
+        match (url.next_path_part(), selected_tag)  {
+            (Some(TAGS), Some(tag)) => Self::Tags(tag),
+            _ => Self::Home,
+        }
+    }
 }
 
 // ------ ------
@@ -88,6 +112,7 @@ impl<'a> Urls<'a> {
 // ------ ------
 
 enum Msg {
+    UrlChanged(subs::UrlChanged),
     DataFetched(fetch::Result<Data>),
     ToggleSearch,
     CloseSearch,
@@ -96,6 +121,9 @@ enum Msg {
 
 fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
+        Msg::UrlChanged(subs::UrlChanged(url)) => {
+            model.page = Page::init(url);
+        },
         Msg::DataFetched(Ok(data)) => {
             model.data = data;
             model
