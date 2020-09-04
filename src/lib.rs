@@ -161,14 +161,6 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
 // View Helpers
 // ------ ------
 
-pub fn repo_url(project_name: &str) -> String {
-    format!("https://github.com/EmbarkStudios/{}", project_name)
-}
-
-pub fn star_button_src(project_name: &str) -> String {
-    format!("https://ghbtns.com/github-btn.html?user=EmbarkStudios&repo={}&type=star&count=true&size=large", project_name)
-}
-
 pub fn iter_projects_by_tag<'a>(
     projects: &'a [Project],
     tag: &'a str,
@@ -181,71 +173,15 @@ pub fn iter_projects_by_tag<'a>(
     })
 }
 
-pub fn view_category<'a>(tag: &str, projects: impl Iterator<Item = &'a Project>, base_url: &Url) -> Node<Msg> {
-    section![
-        C!["category"],
-        h2![
-            C!["category-title"],
-            "Our ",
-            span![C!["category-tag"], tag],
-            " projects"
-        ],
-        div![
-            id!(tag),
-            C!["projects-container"],
-            projects.map(|project| view_project(project, base_url))
-        ]
-    ]
-}
-
-pub fn view_project(project: &Project, base_url: &Url) -> Node<Msg> {
-    a![
-        C!["project"],
-        attrs! {At::Href => repo_url(&project.name)},
-        div![
-            h3![
-                C!["title"],
-                span![C!["emoji"], &project.emoji],
-                " ",
-                &project.name,
-            ],
-            p![raw![&project.description],],
-            view_tags(project.tags.iter(), base_url)
-        ],
-        view_star_button(&project.name),
-    ]
-}
-
-pub fn view_tags<'a>(tags: impl Iterator<Item = &'a String>, base_url: &Url) -> Node<Msg> {
-    div![
-        C!["tags"],
-        tags.map(|tag| {
-            div![
-                C!["tag", format!("tag-{}", tag)],
-                a![attrs! {At::Href => Urls::new(base_url).tags(tag)}, tag]
-            ]
-        })
-    ]
-}
-
-pub fn view_star_button(project_name: &str) -> Node<Msg> {
-    iframe![
-        C!["star-button"],
-        style! {St::Border => 0},
-        attrs! {
-            At::Src => star_button_src(project_name),
-            At::Width => px(160),
-            At::Height => px(30),
-        }
-    ]
-}
-
 // ------ ------
 //     View
 // ------ ------
 
 fn view(model: &Model) -> Vec<Node<Msg>> {
-    let search_results = model.data.projects.iter().filter(|project| {
+    let projects =  &model.data.projects;
+    let base_url = &model.base_url;
+
+    let search_results = projects.iter().filter(|project| {
         project
             .name
             .to_lowercase()
@@ -259,11 +195,11 @@ fn view(model: &Model) -> Vec<Node<Msg>> {
             &model.search_query,
             search_results,
             &model.search_input_element,
-            &model.base_url,
+            base_url,
         ),
         match &model.page {
-            Page::Home => page::home::view(model),
-            Page::Tags(tag) => page::tags::view(model, tag),
+            Page::Home => page::home::view(projects, base_url),
+            Page::Tags(tag) => page::tags::view(tag, projects, base_url),
         }
     ]
 }
@@ -344,7 +280,7 @@ fn view_search_overlay<'a>(
             ],
             div![
                 C!["search-overlay__results"],
-                search_results.map(|project| view_project(project, base_url))
+                search_results.map(|project| page::partial::view_project(project, base_url))
             ]
         ]
     ]

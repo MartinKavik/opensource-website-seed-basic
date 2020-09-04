@@ -1,23 +1,22 @@
 use seed::{prelude::*, *};
-use crate::{Msg, Model, repo_url, view_category, view_tags, Project, view_project, iter_projects_by_tag};
+use crate::{Msg, Project, iter_projects_by_tag};
+use super::partial::{repo_url, view_category, view_tags, view_project};
 
 // ------ ------
 //     View
 // ------ ------
 
-pub fn view(model: &Model) -> Vec<Node<Msg>> {
-    let projects = &model.data.projects;
-
+pub fn view(projects: &[Project], base_url: &Url) -> Vec<Node<Msg>> {
     let featured_projects = projects.iter().filter(|project| project.featured);
-    
+
     vec![
         view_section_hero(),
-        view_section_featured(featured_projects, &model.base_url),
-        view_section_blender(iter_projects_by_tag(projects, "blender"), &model.base_url),
-        view_section_rust(iter_projects_by_tag(projects, "rust"), &model.base_url),
-        view_section_projects(projects, &model.base_url),
+        view_section_featured(featured_projects, base_url),
+        view_section_blender(iter_projects_by_tag(projects, "blender"), base_url),
+        view_section_rust(iter_projects_by_tag(projects, "rust"), base_url),
+        view_section_projects(projects, base_url),
         view_section_sponsorship(),
-        view_section_project_list(projects.iter(), &model.base_url),
+        view_section_project_list(projects.iter(), base_url),
         view_section_newsletter(),
         view_section_contribute(),
     ]

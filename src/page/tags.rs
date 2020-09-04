@@ -1,14 +1,15 @@
 use seed::{prelude::*, *};
-use crate::{Msg, Model, view_category, iter_projects_by_tag, Urls, Project};
+use crate::{Msg, iter_projects_by_tag, Urls, Project};
+use super::partial::view_category;
 
 // ------ ------
 //     View
 // ------ ------
 
-pub fn view(model: &Model, tag: &str) -> Vec<Node<Msg>> {
+pub fn view(tag: &str, projects: &[Project], base_url: &Url) -> Vec<Node<Msg>> {
     vec![
-        view_section_back(&model.base_url),
-        view_section_projects(tag, &model.data.projects, &model.base_url),
+        view_section_back(base_url),
+        view_section_projects(tag, projects, base_url),
     ]
 }
 
