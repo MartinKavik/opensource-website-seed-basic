@@ -4,6 +4,8 @@
 
 Live: https://opensource-website-seed-basic.netlify.app/
 
+Command to build and prepare for deploy to Netlify from `dist` folder: `$ cargo make build_dist`
+
 Original quickstart README:
 
 ---
