@@ -37,6 +37,23 @@ install_crate = { crate_name = "wasm-pack", binary = "wasm-pack", test_arg = "-V
 command = "wasm-pack"
 args = ["build", "--target", "web", "--out-name", "package"]
 
+[tasks.build_dist]
+description = "Build with wasm-pack in release mode and move important files to dist folder"
+dependencies = ["build_release"]
+script = [
+'''
+#!@duckscript
+rm -r dist
+mkdir dist
+
+cp public dist
+cp netlify.toml dist/netlify.toml
+cp index.html dist/index.html
+cp pkg/package.js dist/pkg/package.js
+cp pkg/package_bg.wasm dist/pkg/package_bg.wasm
+'''
+]
+
 # ---- LINT ----
 
 [tasks.clippy]
