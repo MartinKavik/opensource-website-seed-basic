@@ -86,8 +86,8 @@ impl Page {
     fn init(mut url: Url) -> Self {
         let selected_tag = url.search_mut().remove(TAGS_TAG_PARAMETER).and_then(|mut values| values.pop());
 
-        match (url.next_path_part(), selected_tag)  {
-            (Some(TAGS), Some(tag)) => Self::Tags(tag),
+        match (url.remaining_path_parts().as_slice(), selected_tag)  {
+            ([TAGS], Some(tag)) => Self::Tags(tag),
             _ => Self::Home,
         }
     }
@@ -100,7 +100,7 @@ impl Page {
 struct_urls!();
 impl<'a> Urls<'a> {
     pub fn home(self) -> Url {
-        self.base_url()
+        self.base_url().set_search(UrlSearch::default())
     }
     pub fn tags(self, tag: &str) -> Url {
         self.base_url().add_path_part(TAGS).set_search(UrlSearch::new(vec![
@@ -125,6 +125,10 @@ fn update(msg: Msg, model: &mut Model, orders: &mut impl Orders<Msg>) {
     match msg {
         Msg::UrlChanged(subs::UrlChanged(url)) => {
             model.page = Page::init(url);
+
+            window().scroll_to_with_scroll_to_options(
+                web_sys::ScrollToOptions::new().top(0.),
+            );
         },
         Msg::DataFetched(Ok(data)) => {
             model.data = data;
