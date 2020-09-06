@@ -6,6 +6,43 @@ Live: https://opensource-website-seed-basic.netlify.app/
 
 Command to build and prepare for deploy to Netlify from `dist` folder: `$ cargo make build_dist`
 
+_"Hey, Martin"_:
+- _"Why does WASM file have 140KB (gzipped)? (vue.min.js has 33KB)"_
+
+  - WASM size isn't as important as JS file size because WASM can be streamed and browsers process WASM files faster.
+
+  - The most of the memory occupy Seed and its dependencies, it means:
+    - We haven't focused on size optimization yet, so there is still a huge future potential for WASM file size reduction.
+    - Larger apps don't compile to huge WASM files just because you write a lot of code - from our experience the problem is often a big dependency that is not optimized for size and WASM at all.
+
+- _"Web crawlers/bots can't parse the website and the first load is a bit slow!"_
+
+  - We use prerendering to optimize SEO & SMO and performance. For instance, [seed-rs.org](https://seed-rs.org/) is prerendered. Prerendering basically turns Seed to a static site generator. Prerendering is integrated into the [seed-quickstart-webpack](https://github.com/seed-rs/seed-quickstart-webpack) build pipeline and we want to integrate it also to Rust-only quickstarts/app management tools (e.g. [trunk](https://github.com/thedodd/trunk/issues/34) or [Seeder](https://github.com/MartinKavik/seeder)).
+  
+  - Server-side rendering is planed in the distant future.
+
+- _"I see `style.css` in the `public` folder. But you said CSS will by typed."_
+
+  - [Style](https://seed-style-hooks.netlify.app/style_home) library is still experimental and isn't integrated to Seed yet, I'll rewrite `style.css` to Rust in a new branch.
+
+- _"I don't see any React-like Hooks in the code."_
+
+  - The website is pretty simple. There was no need to introduce components with a local state.
+
+- _"HTML / `view` functions look a bit verbose._"
+
+  - The final and less verbose API is in design process. See the related GitHub [issue](https://github.com/seed-rs/seed/issues/525).
+
+- _"Website's search panel and results look differently / broken."_
+  - Layout was already broken in the original website, I've just added a background so the search is useable at least. 
+
+- _"Website's layout is broken on smaller phones (e.g. iPhone SE)"_
+  - I'm using original CSS - it was already broken.
+
+- _"All projects are filtered on each render. Isn't it slow?"_
+
+  - In the most cases - no. It's a good trade-off for super-simple code, especially when the Rust/WASM code is pretty fast. However we know that's not 100% solution - we are working on [reactive](https://seed-style-hooks.netlify.app/hooks_home) chains (inspired by https://recoiljs.org/ ; global state is basically represented by a bunch of precomputed variables that are automatically recomputed when needed). There are also experiments with combinations with [immutable collections](https://github.com/bodil/im-rs). I'll try to integrate it in a new branch.
+
 Original quickstart README:
 
 ---
